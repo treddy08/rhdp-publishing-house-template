@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Sync workflow data to local files. Used by intake/development skills.
+"""Sync workflow rejections to local files. Used by intake/development skills.
 
-Always calls /workflow-data and /workflow-state. Only writes fields to
-spec.yaml and catalog-info.yaml if they are not already set locally.
+Always calls /workflow-data and /workflow-state. Only syncs rejections.
+workflow_id, epic_key, and jira_url are synced by create-catalog endpoint.
 Rejections are synced per-reason by UUID, routed to content/infra sections.
 
 Output: key:value pairs, one per line
   stage:intake
   workflow_id:abc-123
   epic_key:RHDPCD-456
+  unresolved_rejections:2
 """
 import json
 import os
@@ -28,40 +29,6 @@ def find_repo_root():
             return p
         p = p.parent
     return None
-
-
-def set_yaml_value(filepath, dotted_key, value):
-    """Update a single value in a YAML file without rewriting the entire file."""
-    text = filepath.read_text()
-    keys = dotted_key.split(".")
-    if len(keys) == 2:
-        section, field = keys
-        pattern = re.compile(
-            rf'^(\s*){re.escape(field)}:\s*"?.*"?\s*$', re.MULTILINE
-        )
-        in_section = False
-        lines = text.split("\n")
-        new_lines = []
-        replaced = False
-        for line in lines:
-            if re.match(rf'^{re.escape(section)}:\s*$', line):
-                in_section = True
-                new_lines.append(line)
-                continue
-            if in_section and not replaced:
-                m = pattern.match(line)
-                if m:
-                    indent = m.group(1)
-                    new_lines.append(f'{indent}{field}: "{value}"')
-                    replaced = True
-                    continue
-                if line and not line[0].isspace() and line[0] != "#":
-                    in_section = False
-            new_lines.append(line)
-        if replaced:
-            filepath.write_text("\n".join(new_lines))
-            return True
-    return False
 
 
 def sync_rejection(spec_path, rejection):
@@ -162,32 +129,10 @@ def main():
         print(json.dumps({"error": f"Failed to fetch workflow data: {e}"}))
         sys.exit(1)
 
-    wd_wfid = wd.get("workflow_id", "")
-    wd_epic = wd.get("epic_key", "")
     rejection = wd.get("rejection")
 
-    if not wfid and wd_wfid:
-        wfid = wd_wfid
-        set_yaml_value(spec_path, "project.workflow_id", wfid)
-
-    deployment_mode = project.get("deployment_mode", "self_published")
-    if deployment_mode == "rhdp_published" and not epic_key and wd_epic:
-        epic_key = wd_epic
-        set_yaml_value(spec_path, "project.jira_ticket", epic_key)
-
-    if epic_key and deployment_mode == "rhdp_published":
-        jira_url = f"https://redhat.atlassian.net/browse/{epic_key}"
-        ci_path = root / "catalog-info.yaml"
-        ci_text = ci_path.read_text()
-        if jira_url not in ci_text:
-            ci = yaml.safe_load(ci_text)
-            links = ci.get("metadata", {}).get("links", [])
-            links.append(
-                {"url": jira_url, "title": "Jira Epic", "icon": "dashboard"}
-            )
-            ci.setdefault("metadata", {})["links"] = links
-            with open(ci_path, "w") as f:
-                yaml.dump(ci, f, default_flow_style=False, sort_keys=False)
+    # workflow_id, epic_key, and jira_url are synced by create-catalog endpoint
+    # We only read them here for output, not write them
 
     stage = "intake"
     if wfid:
