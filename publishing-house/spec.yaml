@@ -6,15 +6,15 @@
 # TODO: Eliminate this copy — Scaffolder should pull from template repo directly.
 
 project:
-  slug: "${{ values.project_name }}"
-  owner_email: "${{ values.user_email }}"
-  content_type: "${{ values.content_type }}"
-  deployment_mode: "${{ values.deployment_mode }}"
-  initiative_key: "${{ values.initiative_key }}"
-  showroom_type: "${{ values.showroom_type }}"
-  intake_type: "${{ values.intake_type }}"
-  automation_type: "${{ values.automation_type }}"
-  description: "${{ values.project_description | replace('\r', '') | replace('\n', ' ') | replace('\t', ' ') | replace('\\', '\\\\') | replace('"', '\\"') }}"
+  slug: "{{ values.project_name }}"
+  owner_email: "{{ values.user_email }}"
+  content_type: "{{ values.content_type }}"
+  deployment_mode: "{{ values.deployment_mode }}"
+  initiative_key: "{{ values.initiative_key }}"
+  showroom_type: "{{ values.showroom_type }}"
+  intake_type: "{{ values.intake_type }}"
+  automation_type: "{{ values.automation_type }}"
+  description: "{{ values.project_description | replace('\r', '') | replace('\n', ' ') | replace('\t', ' ') | replace('\\', '\\\\') | replace('"', '\\"') }}"
   # content_reviewer_email and infra_reviewer_email are assigned by the RHDP team — not set by the author
   jira_ticket: ""
   workflow_id: ""
