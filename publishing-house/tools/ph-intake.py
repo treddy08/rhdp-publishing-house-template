@@ -186,9 +186,9 @@ def main():
         sys.exit(1)
 
     spec = yaml.safe_load(spec_path.read_text()) or {}
-    project_id = spec.get("project", {}).get("slug", "")
-    if not project_id:
-        print(json.dumps({"error": "project.slug missing in spec.yaml"}))
+    workflow_id = spec.get("project", {}).get("workflow_id", "")
+    if not workflow_id:
+        print(json.dumps({"error": "project.workflow_id missing in spec.yaml"}))
         sys.exit(1)
 
     repo_url = get_repo_url(root)
@@ -226,7 +226,7 @@ def main():
         "X-GitHub-User": github_user,
     }
 
-    intake_url = f"{central_url}/api/v1/projects/intake/{project_id}"
+    intake_url = f"{central_url}/api/v1/projects/{workflow_id}/intake"
     intake_body = json.dumps({"repo_url": repo_url, "branch": "main"}).encode()
     req = urllib.request.Request(intake_url, data=intake_body, headers=headers, method="POST")
 
