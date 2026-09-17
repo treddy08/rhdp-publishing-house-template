@@ -57,9 +57,9 @@ def main():
     spec_path = root / "publishing-house" / "spec.yaml"
     spec = yaml.safe_load(spec_path.read_text()) or {} if spec_path.exists() else {}
     project = spec.get("project", {})
-    project_id = project.get("slug", "")
-    if not project_id:
-        print(json.dumps({"error": "project.slug missing in spec.yaml"}))
+    workflow_id = project.get("workflow_id", "")
+    if not workflow_id:
+        print(json.dumps({"error": "project.workflow_id missing in spec.yaml"}))
         sys.exit(1)
 
     ctx = ssl.create_default_context()
@@ -68,7 +68,7 @@ def main():
 
     try:
         req = urllib.request.Request(
-            f"{central}/api/v1/projects/{project_id}/workflow-data",
+            f"{central}/api/v1/projects/{workflow_id}/workflow-data",
             headers={"Authorization": f"Bearer {api_key}"},
         )
         with urllib.request.urlopen(req, context=ctx, timeout=10) as r:

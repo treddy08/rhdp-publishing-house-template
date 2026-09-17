@@ -106,11 +106,10 @@ def main():
     spec = yaml.safe_load(spec_path.read_text()) or {} if spec_path.exists() else {}
     project = spec.get("project", {})
 
-    project_id = project.get("slug", "")
-    if not project_id:
-        print(json.dumps({"error": "project.slug missing in spec.yaml"}))
+    workflow_id = project.get("workflow_id", "")
+    if not workflow_id:
+        print(json.dumps({"error": "project.workflow_id missing in spec.yaml"}))
         sys.exit(1)
-    wfid = project.get("workflow_id", "")
     epic_key = project.get("jira_ticket", "")
 
     ctx = ssl.create_default_context()
@@ -120,7 +119,7 @@ def main():
 
     try:
         req = urllib.request.Request(
-            f"{central}/api/v1/projects/{project_id}/workflow-data",
+            f"{central}/api/v1/projects/{workflow_id}/workflow-data",
             headers=headers,
         )
         with urllib.request.urlopen(req, context=ctx, timeout=10) as r:
@@ -130,23 +129,10 @@ def main():
         sys.exit(1)
 
     rejection = wd.get("rejection")
+    stage = wd.get("stage", "intake")
 
     # workflow_id, epic_key, and jira_url are synced by create-catalog endpoint
     # We only read them here for output, not write them
-
-    stage = "intake"
-    if wfid:
-        try:
-            req = urllib.request.Request(
-                f"{central}/api/v1/projects/workflow-state/{wfid}",
-                headers=headers,
-            )
-            with urllib.request.urlopen(req, context=ctx, timeout=10) as r:
-                st = json.loads(r.read().decode())
-            stage = st.get("stage", "intake")
-        except Exception as e:
-            print(json.dumps({"error": f"Failed to fetch workflow state: {e}"}))
-            sys.exit(1)
 
     sync_rejection(spec_path, rejection)
 
@@ -158,7 +144,7 @@ def main():
                 unresolved += 1
 
     print(f"stage:{stage}")
-    print(f"workflow_id:{wfid}")
+    print(f"workflow_id:{workflow_id}")
     print(f"epic_key:{epic_key}")
     print(f"unresolved_rejections:{unresolved}")
 

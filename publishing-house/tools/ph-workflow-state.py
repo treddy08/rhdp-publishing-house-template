@@ -19,7 +19,7 @@ def main():
         print(json.dumps({"error": "Usage: ph-workflow-state.py <workflow_id>"}))
         sys.exit(1)
 
-    wfid = sys.argv[1]
+    workflow_id = sys.argv[1]
 
     auth_path = Path(os.path.expanduser("~/.config/publishing-house/auth.json"))
     if not auth_path.exists():
@@ -39,14 +39,14 @@ def main():
 
     try:
         req = urllib.request.Request(
-            f"{central}/api/v1/projects/workflow-state/{wfid}",
+            f"{central}/api/v1/projects/{workflow_id}/workflow-data?minimal=true",
             headers={"Authorization": f"Bearer {api_key}"},
         )
         with urllib.request.urlopen(req, context=ctx, timeout=10) as r:
-            st = json.loads(r.read().decode())
-        stage = st.get("stage", "intake")
+            wd = json.loads(r.read().decode())
+        stage = wd.get("stage", "intake")
     except Exception as e:
-        print(json.dumps({"error": f"Failed to fetch workflow state: {e}"}))
+        print(json.dumps({"error": f"Failed to fetch workflow data: {e}"}))
         sys.exit(1)
 
     print(f"stage:{stage}")

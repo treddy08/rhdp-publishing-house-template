@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Query workflow data for a project. Read-only — writes nothing.
 
-Calls /workflow-data with the project slug to resolve workflow_id and epic_key.
+Calls /workflow-data with workflow_id from spec.yaml to get epic_key and other data.
 
 Output: key:value pairs, one per line
   workflow_id:abc-123
@@ -48,9 +48,9 @@ def main():
     spec = yaml.safe_load(spec_path.read_text()) or {} if spec_path.exists() else {}
     project = spec.get("project", {})
 
-    project_id = project.get("slug", "")
-    if not project_id:
-        print(json.dumps({"error": "project.slug missing in spec.yaml"}))
+    workflow_id = project.get("workflow_id", "")
+    if not workflow_id:
+        print(json.dumps({"error": "project.workflow_id missing in spec.yaml"}))
         sys.exit(1)
 
     ctx = ssl.create_default_context()
@@ -59,18 +59,17 @@ def main():
 
     try:
         req = urllib.request.Request(
-            f"{central}/api/v1/projects/{project_id}/workflow-data",
+            f"{central}/api/v1/projects/{workflow_id}/workflow-data",
             headers={"Authorization": f"Bearer {api_key}"},
         )
         with urllib.request.urlopen(req, context=ctx, timeout=10) as r:
             wd = json.loads(r.read().decode())
-        wfid = wd.get("workflow_id", "")
         epic_key = wd.get("epic_key", "")
     except Exception as e:
         print(json.dumps({"error": f"Failed to fetch workflow data: {e}"}))
         sys.exit(1)
 
-    print(f"workflow_id:{wfid}")
+    print(f"workflow_id:{workflow_id}")
     print(f"epic_key:{epic_key}")
 
 
