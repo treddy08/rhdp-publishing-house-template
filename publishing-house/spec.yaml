@@ -42,6 +42,7 @@ spec:
 
     # --- VM-specific fields (only when platform = rhel-vms) ---
     # Each entry: {role, count, cpu, ram_gb, disk_gb, os, version}
+    # RHEL version from template (values.rhel_version) is used by intake skill to populate version field for all VMs
     vms_per_student: []
 
     # --- Common fields (both platforms) ---
