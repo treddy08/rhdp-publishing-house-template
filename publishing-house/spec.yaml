@@ -41,7 +41,7 @@ spec:
     worker_disk_gb: null               # disk per worker in GB
 
     # --- VM-specific fields (only when platform = rhel-vms) ---
-    # Each entry: {role, count, cpu, ram_gb, disk_gb, os}
+    # Each entry: {role, count, cpu, ram_gb, disk_gb, os, version}
     vms_per_student: []
 
     # --- Common fields (both platforms) ---
